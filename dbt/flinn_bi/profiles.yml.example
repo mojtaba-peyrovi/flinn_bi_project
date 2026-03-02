@@ -1,0 +1,9 @@
+flinn_bi:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: flinn_bi.duckdb
+      schema: analytics
+      threads: 4
+

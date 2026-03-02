@@ -1,0 +1,27 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local data (source CSVs live here; dbt seeds are committed separately)
+data/
+
+# dbt artifacts
+**/target/
+**/dbt_packages/
+**/logs/
+
+# Local dbt profile (example is committed)
+profiles.yml
+**/profiles.yml
+
+# dbt user-local metadata
+**/.user.yml
+
+# DuckDB local databases
+*.duckdb
+*.duckdb.wal
+*.duckdb.tmp
+
+.DS_Store

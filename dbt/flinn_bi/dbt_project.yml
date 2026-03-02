@@ -1,0 +1,73 @@
+name: "flinn_bi"
+version: "1.0.0"
+config-version: 2
+
+profile: "flinn_bi"
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+seeds:
+  flinn_bi:
+    +quote_columns: false
+
+    backend_events:
+      +column_types:
+        event_id: varchar
+        event_name: varchar
+        event_timestamp: timestamp
+        user_id: varchar
+        organization_id: varchar
+        event_properties: varchar
+
+    hubspot_deals:
+      +column_types:
+        deal_id: bigint
+        deal_name: varchar
+        pipeline: varchar
+        is_closed: boolean
+        is_closed_won: boolean
+        amount: double
+        close_date: timestamp
+        create_date: timestamp
+        hubspot_company_id: bigint
+        deal_type: varchar
+        currency: varchar
+        date_entered_pre_pitch: timestamp
+        date_entered_pitching: timestamp
+        date_entered_product_testing: timestamp
+        date_entered_price_offering: timestamp
+        date_entered_contract_negotiation: timestamp
+        date_entered_closed_won: timestamp
+        date_entered_closed_lost: timestamp
+
+    hubspot_org:
+      +column_types:
+        company_id: bigint
+        company_name: varchar
+        domain: varchar
+        industry: varchar
+        country: varchar
+        number_of_employees: varchar
+        create_date: timestamp
+
+    hubspot_contacts:
+      +column_types:
+        contact_id: bigint
+        first_name: varchar
+        last_name: varchar
+        email: varchar
+        job_title: varchar
+        hubspot_company_id: bigint
+        lifecycle_stage: varchar
+        create_date: timestamp
+
