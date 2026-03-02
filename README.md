@@ -53,3 +53,16 @@ Or connect with a SQL client that supports DuckDB (e.g., DBeaver/DataGrip) using
 
 ## Notes
 - This is intentionally minimal; models and tests are added in later tasks.
+
+## EDA highlights (Task 2)
+- Notebook: `notebooks/01_eda.ipynb`
+- Bonus insight summary: `outputs/bonus_insight.md`
+- dbt-web-runnable EDA queries (dbt analyses): `dbt/flinn_bi/analyses/`
+  - `dbt/flinn_bi/analyses/bonus_activation_funnel.sql`
+  - `dbt/flinn_bi/analyses/backend_to_hubspot_mapping.sql`
+  - `dbt/flinn_bi/analyses/eda_seed_profiling.sql`
+
+Headline findings:
+- Seeds are clean at the ID level (no null IDs, no duplicate IDs) and have consistent date coverage across 2024–2026.
+- Backend events cover 37 orgs (≈14.6% of HubSpot companies); product-event retention will reflect this subset.
+- Bonus insight: **62.0% (93/150)** of new users run `SearchExecuted` within 7 days of `UserCreated` (see `outputs/bonus_insight.md`).
