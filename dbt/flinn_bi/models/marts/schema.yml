@@ -1,0 +1,61 @@
+version: 2
+
+models:
+  - name: mart_customers_today
+    description: "Customer companies as-of the dbt run date (orgs with at least one Closed Won deal). One row per HubSpot company."
+    columns:
+      - name: as_of_date
+        description: "Date when the model was built."
+        tests:
+          - not_null
+      - name: company_id
+        description: "HubSpot company ID."
+        tests:
+          - not_null
+          - unique
+      - name: first_closed_won_date
+        description: "First date the company had a Closed Won deal."
+        tests:
+          - not_null
+
+  - name: mart_acv
+    description: "ACV summary computed from Closed Won deals (overall + by deal type)."
+    columns:
+      - name: as_of_date
+        description: "Date when the model was built."
+        tests:
+          - not_null
+      - name: acv_definition
+        description: "Label describing the aggregation level for the ACV calculation."
+        tests:
+          - not_null
+      - name: mean_acv
+        description: "Mean deal amount (interpreted as ACV under stated assumptions)."
+        tests:
+          - not_null
+      - name: median_acv
+        description: "Median deal amount (interpreted as ACV under stated assumptions)."
+        tests:
+          - not_null
+
+  - name: mart_user_retention
+    description: "Monthly cohort retention for backend users. Cohort is month of first UserCreated; active excludes TokenGenerated and identity/org maintenance events."
+    columns:
+      - name: cohort_month
+        description: "Month bucket for the cohort (user signup month)."
+        tests:
+          - not_null
+      - name: period_number
+        description: "Months since cohort_month (0 = signup month)."
+        tests:
+          - not_null
+      - name: cohort_size
+        description: "Total users in cohort."
+        tests:
+          - not_null
+      - name: active_users
+        description: "Distinct active users in the cohort during the period."
+        tests:
+          - not_null
+      - name: retention_rate
+        description: "active_users / cohort_size."

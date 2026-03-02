@@ -16,6 +16,15 @@ clean-targets:
   - "target"
   - "dbt_packages"
 
+models:
+  flinn_bi:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: view
+    marts:
+      +materialized: table
+
 seeds:
   flinn_bi:
     +quote_columns: false
@@ -70,4 +79,3 @@ seeds:
         hubspot_company_id: bigint
         lifecycle_stage: varchar
         create_date: timestamp
-

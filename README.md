@@ -54,6 +54,68 @@ Or connect with a SQL client that supports DuckDB (e.g., DBeaver/DataGrip) using
 ## Notes
 - This is intentionally minimal; models and tests are added in later tasks.
 
+## Data model (Task 3)
+This project follows a simple 3-layer dbt structure:
+- **Staging (`stg_`)**: clean column names/types and normalize join keys.
+- **Intermediate (`int_`)**: relationship helpers + cohort/activity helpers.
+- **Marts (`mart_`)**: final tables used to answer Q1–Q3.
+
+### Lineage / ERD (Mermaid)
+```mermaid
+flowchart LR
+  subgraph Seeds
+    backend_events[seed: backend_events]
+    hubspot_org[seed: hubspot_org]
+    hubspot_contacts[seed: hubspot_contacts]
+    hubspot_deals[seed: hubspot_deals]
+  end
+
+  subgraph Staging
+    stg_backend_events[stg_backend_events]
+    stg_hubspot_org[stg_hubspot_org]
+    stg_hubspot_contacts[stg_hubspot_contacts]
+    stg_hubspot_deals[stg_hubspot_deals]
+  end
+
+  subgraph Intermediate
+    int_hubspot_customer_orgs[int_hubspot_customer_orgs]
+    int_hubspot_deals_enriched[int_hubspot_deals_enriched]
+    int_hubspot_contacts_enriched[int_hubspot_contacts_enriched]
+    int_backend_users[int_backend_users]
+    int_backend_user_activity[int_backend_user_activity]
+  end
+
+  subgraph Marts
+    mart_customers_today[mart_customers_today]
+    mart_acv[mart_acv]
+    mart_user_retention[mart_user_retention]
+  end
+
+  backend_events --> stg_backend_events
+  hubspot_org --> stg_hubspot_org
+  hubspot_contacts --> stg_hubspot_contacts
+  hubspot_deals --> stg_hubspot_deals
+
+  stg_hubspot_deals --> int_hubspot_customer_orgs
+  stg_hubspot_org --> int_hubspot_customer_orgs
+  stg_hubspot_deals --> int_hubspot_deals_enriched
+  stg_hubspot_org --> int_hubspot_deals_enriched
+  stg_hubspot_contacts --> int_hubspot_contacts_enriched
+  stg_hubspot_org --> int_hubspot_contacts_enriched
+  stg_backend_events --> int_backend_users
+  stg_backend_events --> int_backend_user_activity
+
+  int_hubspot_customer_orgs --> mart_customers_today
+  stg_hubspot_deals --> mart_acv
+  int_backend_users --> mart_user_retention
+  int_backend_user_activity --> mart_user_retention
+```
+
+### Data quality issues (and how dbt mitigates them)
+- **Key integrity:** seed IDs are non-null + unique; staging models enforce this via tests.
+- **Join reliability:** HubSpot FK joins (deals/contacts → company) are validated with relationship tests.
+- **Retention inflation risk:** `TokenGenerated` is excluded from the “active” definition used for retention (documented in `ASSUMPTIONS.md`).
+
 ## EDA highlights (Task 2)
 - Notebook: `notebooks/01_eda.ipynb`
 - Bonus insight summary: `outputs/bonus_insight.md`

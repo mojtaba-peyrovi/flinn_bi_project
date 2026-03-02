@@ -1,0 +1,125 @@
+version: 2
+
+models:
+  - name: stg_backend_events
+    description: "Staged backend product events with cleaned column names and types."
+    columns:
+      - name: event_id
+        description: "Unique identifier for the backend event."
+        tests:
+          - not_null
+          - unique
+      - name: event_name
+        description: "Backend event type."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - TokenGenerated
+                  - SearchExecuted
+                  - SearchResultAppraised
+                  - SearchUpdated
+                  - SearchResultFullTextAppraised
+                  - SearchCreated
+                  - SearchExported
+                  - LabelCreated
+                  - LabelUpdated
+                  - LabelDeleted
+                  - UserCreated
+                  - OrganizationUpdated
+                  - UserUpdated
+                  - OrganizationCreated
+      - name: event_timestamp
+        description: "Timestamp when the event occurred."
+        tests:
+          - not_null
+      - name: user_id
+        description: "Backend user UUID."
+        tests:
+          - not_null
+      - name: backend_organization_id
+        description: "Backend organization UUID."
+        tests:
+          - not_null
+
+  - name: stg_hubspot_org
+    description: "Staged HubSpot company (org) records."
+    columns:
+      - name: company_id
+        description: "HubSpot company ID."
+        tests:
+          - not_null
+          - unique
+      - name: company_name
+        description: "Company name."
+        tests:
+          - not_null
+      - name: domain
+        description: "Company domain, normalized to lowercase."
+
+  - name: stg_hubspot_contacts
+    description: "Staged HubSpot contacts. Email is normalized to lowercase for reliable joins."
+    columns:
+      - name: contact_id
+        description: "HubSpot contact ID."
+        tests:
+          - not_null
+          - unique
+      - name: email
+        description: "Contact email, normalized to lowercase."
+        tests:
+          - not_null
+      - name: hubspot_company_id
+        description: "HubSpot company ID associated to the contact."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_hubspot_org')
+                field: company_id
+      - name: lifecycle_stage
+        description: "HubSpot lifecycle stage."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [lead, opportunity, customer]
+
+  - name: stg_hubspot_deals
+    description: "Staged HubSpot deals with typed dates and standardized boolean flags."
+    columns:
+      - name: deal_id
+        description: "HubSpot deal ID."
+        tests:
+          - not_null
+          - unique
+      - name: hubspot_company_id
+        description: "HubSpot company ID associated to the deal."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_hubspot_org')
+                field: company_id
+      - name: pipeline
+        description: "HubSpot deal pipeline."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["Sales Pipeline"]
+      - name: deal_type
+        description: "Deal type: newbusiness vs existing_business."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [newbusiness, existing_business]
+      - name: currency
+        description: "Deal currency code."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [EUR]

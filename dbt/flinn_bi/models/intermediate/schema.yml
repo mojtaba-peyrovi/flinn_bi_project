@@ -1,0 +1,74 @@
+version: 2
+
+models:
+  - name: int_hubspot_deals_enriched
+    description: "Deals enriched with HubSpot company attributes."
+    columns:
+      - name: deal_id
+        description: "HubSpot deal ID."
+        tests:
+          - not_null
+          - unique
+      - name: hubspot_company_id
+        description: "HubSpot company ID associated to the deal."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_hubspot_org')
+                field: company_id
+
+  - name: int_hubspot_contacts_enriched
+    description: "Contacts enriched with HubSpot company attributes."
+    columns:
+      - name: contact_id
+        description: "HubSpot contact ID."
+        tests:
+          - not_null
+          - unique
+      - name: hubspot_company_id
+        description: "HubSpot company ID associated to the contact."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_hubspot_org')
+                field: company_id
+
+  - name: int_hubspot_customer_orgs
+    description: "HubSpot companies that are considered customers (have at least one Closed Won deal), with aggregate Closed Won deal stats."
+    columns:
+      - name: company_id
+        description: "HubSpot company ID."
+        tests:
+          - not_null
+          - unique
+      - name: closed_won_deal_count
+        description: "Count of Closed Won deals for the company."
+        tests:
+          - not_null
+
+  - name: int_backend_users
+    description: "One row per backend user with their first UserCreated timestamp."
+    columns:
+      - name: user_id
+        description: "Backend user UUID."
+        tests:
+          - not_null
+          - unique
+      - name: user_created_ts
+        description: "Earliest UserCreated timestamp for the user."
+        tests:
+          - not_null
+
+  - name: int_backend_user_activity
+    description: "Backend user activity events used for retention (excludes TokenGenerated and identity/org maintenance events)."
+    columns:
+      - name: user_id
+        description: "Backend user UUID."
+        tests:
+          - not_null
+      - name: activity_month
+        description: "Month bucket for activity."
+        tests:
+          - not_null
