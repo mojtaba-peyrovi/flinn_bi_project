@@ -1,21 +1,21 @@
 # Assumptions log
 
-Keep definitions and modeling decisions here as they become clear.
+Timestamped definitions + modeling decisions.
 
-## Placeholders (to be finalized)
-- **Customer definition:** HubSpot company (org) with **at least one** deal where `is_closed_won = true` (see `mart_customers_today`).
-- **ACV definition:** Deal `amount` is interpreted as **annual contract value (ACV)** in `EUR`. ACV is summarized as **mean + median** across **Closed Won** deals (see `mart_acv`, including a breakdown by `deal_type`).
-- **Retention definition:** **Monthly cohort retention** for backend users. Cohort = month of first `UserCreated`. “Active” = any event excluding `TokenGenerated` and identity/org maintenance events (`UserCreated`, `UserUpdated`, `OrganizationCreated`, `OrganizationUpdated`) (see `mart_user_retention`).
-
-## Initial notes (2026-03-02)
-- HubSpot “org” source file provided as `hubspot_companies.csv`; loaded as seed `hubspot_org`.
-- Raw source CSVs live in `./data` (ignored); dbt seeds are committed under `dbt/flinn_bi/seeds/`.
-
-## EDA-driven notes (2026-03-02)
-- **Backend ↔ HubSpot mapping:** backend `organization_id` (UUID) can be mapped to HubSpot `company_id` via `UserCreated` events by extracting `event_properties.user.email` and joining to `hubspot_contacts.email`. In this dataset it’s 1:1 for all backend orgs (37 orgs).
-- **Email availability:** `event_properties.user.email` is missing for most backend event types; treat `UserCreated` as the reliable source for email-based linking and then join other backend events via `user_id` / `organization_id` to the mapping.
-- **Activation funnel definition (bonus insight):**\n  - New user = earliest `UserCreated` per `user_id`.\n  - Activated = any `SearchExecuted` within `[user_created_ts, user_created_ts + 7 days]` (inclusive).\n  - Exclude rows with missing `user_id` or `event_timestamp` (none observed in this dataset).
-
-## dbt modeling decisions (2026-03-02)
-- `stg_hubspot_contacts.email` is normalized to lowercase + trimmed for stable joins.
-- Customer/ACV metrics are HubSpot-derived; retention is backend-event-derived. Backend events cover a subset of HubSpot companies, so retention reflects product usage for that subset of users.
+- **2026-03-02 — Sources:** raw CSVs are committed as dbt seeds under `dbt/flinn_bi/seeds/` (the `data/` folder is ignored).
+- **2026-03-02 — Customer definition (Q1):** a “customer” is a HubSpot **company** with **≥ 1 Closed Won deal** (`is_closed_won = true`). Implemented in `analytics.mart_customers_today`.
+- **2026-03-02 — Deal stage logic:** deal outcome is taken directly from the provided boolean fields (`is_closed`, `is_closed_won`) in HubSpot deals (no additional stage mapping applied).
+- **2026-03-02 — ACV interpretation (Q2):** HubSpot `amount` is treated as **ACV** (annual) and aggregated across **Closed Won** deals (mean + median). Currency in the provided data is **EUR** (verified on Closed Won deals). Implemented in `analytics.mart_acv`.
+- **2026-03-02 — Retention definition (Q3):** monthly cohort “activity rate” for backend users.
+  - Cohort = month of earliest `UserCreated` per `user_id`.
+  - Active in month N = user has **any** backend event excluding: `TokenGenerated`, `UserCreated`, `UserUpdated`, `OrganizationCreated`, `OrganizationUpdated`.
+  - Note: under this definition, month 1 can be higher than month 0 (users may have no qualifying activity in their creation month).
+  - Implemented in `analytics.mart_user_retention`.
+- **2026-03-02 — Backend ↔ HubSpot mapping (join limitations):**
+  - Mapping uses `UserCreated` events by extracting `event_properties.user.email` and joining to `hubspot_contacts.email` (normalized to lowercase/trimmed in staging).
+  - `event_properties.user.email` is missing for most other event types, so `UserCreated` is treated as the reliable email source and other events are linked via `user_id` / `organization_id`.
+  - Backend events cover **37 orgs**, so any product-usage analysis reflects a subset of HubSpot companies.
+- **2026-03-02 — Activation funnel (bonus insight):**
+  - New user = earliest `UserCreated` per `user_id`.
+  - Activated = any `SearchExecuted` within `[user_created_ts, user_created_ts + 7 days]` (inclusive).
+  - Repro in `dbt/flinn_bi/analyses/bonus_activation_funnel.sql` and `notebooks/01_eda.ipynb`.

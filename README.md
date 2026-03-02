@@ -1,14 +1,15 @@
-# Flinn BI — dbt-first (DuckDB)
+# Flinn BI — Technical Challenge (dbt-first, DuckDB)
 
-This repo is a lean, **dbt-first** analytics project using **DuckDB** so it can run locally with zero external warehouse setup.
+Lean analytics repo answering Q1–Q3 with simple, review-friendly **dbt modeling** on **DuckDB** (zero external warehouse setup).
 
 ## Repo layout
 - `dbt/flinn_bi/`: dbt project
 - `dbt/flinn_bi/seeds/`: source CSVs loaded via `dbt seed` (committed)
-- `data/`: raw CSV drop folder (ignored; not committed)
+- `notebooks/`: lightweight EDA
+- `outputs/`: short EDA-driven write-ups
 
 ## How to run (local)
-### 1) Create a Python env (use Python 3.11+)
+### 1) Create a Python env (Python 3.11+)
 From repo root:
 ```bash
 py -3.11 -m venv .venv
@@ -17,20 +18,15 @@ py -3.11 -m venv .venv
 ```
 
 ### 2) Configure dbt profile
-Use the example profile:
 ```bash
 copy dbt\flinn_bi\profiles.yml.example dbt\flinn_bi\profiles.yml
 ```
 
-Then run dbt with that profiles directory:
+### 3) Seed + build + test
 ```bash
 cd dbt\flinn_bi
 $env:DBT_PROFILES_DIR = (Get-Location).Path
 dbt debug
-```
-
-### 3) Load seeds + build models
-```bash
 dbt seed
 dbt build
 ```
@@ -41,24 +37,67 @@ dbt docs generate
 dbt docs serve
 ```
 
-## Querying the data (DuckDB)
-dbt writes tables/views into the DuckDB file configured in `dbt/flinn_bi/profiles.yml` (default: `dbt/flinn_bi/flinn_bi.duckdb`).
+## Answers (as of 2026-03-02)
+All numbers below come from the marts in `dbt/flinn_bi/models/marts/`.
 
-You can query it via Python:
-```bash
-.\.venv\Scripts\python -c "import duckdb; con=duckdb.connect('dbt/flinn_bi/flinn_bi.duckdb'); print(con.sql('show tables').fetchall())"
+### Q1) How many customers today?
+- **Answer:** **26 customers**
+- **Definition:** a “customer” is a HubSpot **company** with **≥ 1 Closed Won deal** (`is_closed_won = true`).
+- **Model:** `analytics.mart_customers_today` (1 row per customer company)
+
+Repro (DuckDB):
+```sql
+select count(*) as customer_count
+from analytics.mart_customers_today;
 ```
 
-Or connect with a SQL client that supports DuckDB (e.g., DBeaver/DataGrip) using the `.duckdb` file.
+### Q2) What is ACV?
+- **Answer (overall):** **mean €12,967.74**, **median €12,000** (across **31** Closed Won deals; currency in data is **EUR**)
+- **Definition:** HubSpot `amount` is treated as **ACV** (see caveats in `ASSUMPTIONS.md`).
+- **Model:** `analytics.mart_acv`
 
-## Notes
-- This is intentionally minimal; models and tests are added in later tasks.
+Repro (DuckDB):
+```sql
+select closed_won_deal_count, mean_acv, median_acv
+from analytics.mart_acv
+where acv_definition = 'all_closed_won';
+```
 
-## Data model (Task 3)
+### Q3) What is retention?
+- **Definition:** **monthly cohort “activity rate”** for backend users
+  - cohort = month of first `UserCreated` per `user_id`
+  - active in month N = user has **any** backend event **excluding**: `TokenGenerated`, `UserCreated`, `UserUpdated`, `OrganizationCreated`, `OrganizationUpdated`
+- **Headline (weighted across cohorts):** month 0 **84.0%**, month 1 **99.3%**, month 3 **96.6%**, month 6 **92.4%**, month 12 **87.1%**
+- **Model:** `analytics.mart_user_retention`
+
+Repro (DuckDB):
+```sql
+select
+  period_number,
+  sum(active_users)::double / sum(cohort_size) as retention_rate
+from analytics.mart_user_retention
+group by 1
+order by 1;
+```
+
+## Assumptions + data quality
+- Assumptions log: `ASSUMPTIONS.md`
+
+Top issues (and impact):
+- **Backend ↔ HubSpot coverage is partial:** backend events cover **37 orgs**; HubSpot-derived metrics (customers/ACV) apply to all HubSpot companies, while retention reflects only the product-event subset.
+- **Mapping relies on `UserCreated` email:** `event_properties.user.email` is not consistently present on other event types, so the mapping is built from `UserCreated` and then applied via `user_id` / `organization_id` joins.
+- **“Retention” is an activity rate:** users can be inactive in month 0 but active in month 1+, so the curve can increase (this is expected under this definition).
+
+## Bonus insight (EDA-driven)
+- **Activation funnel:** **62.0% (93 / 150)** of new users execute `SearchExecuted` within 7 days of `UserCreated`.
+- Write-up: `outputs/bonus_insight.md`
+- Repro queries (dbt analyses): `dbt/flinn_bi/analyses/bonus_activation_funnel.sql`
+
+## Data model
 This project follows a simple 3-layer dbt structure:
-- **Staging (`stg_`)**: clean column names/types and normalize join keys.
-- **Intermediate (`int_`)**: relationship helpers + cohort/activity helpers.
-- **Marts (`mart_`)**: final tables used to answer Q1–Q3.
+- **Staging (`stg_`)**: clean column names/types and normalize join keys
+- **Intermediate (`int_`)**: relationship helpers + cohort/activity helpers
+- **Marts (`mart_`)**: final tables used to answer Q1–Q3
 
 ### Lineage / ERD (Mermaid)
 ```mermaid
@@ -111,20 +150,10 @@ flowchart LR
   int_backend_user_activity --> mart_user_retention
 ```
 
-### Data quality issues (and how dbt mitigates them)
-- **Key integrity:** seed IDs are non-null + unique; staging models enforce this via tests.
-- **Join reliability:** HubSpot FK joins (deals/contacts → company) are validated with relationship tests.
-- **Retention inflation risk:** `TokenGenerated` is excluded from the “active” definition used for retention (documented in `ASSUMPTIONS.md`).
-
-## EDA highlights (Task 2)
-- Notebook: `notebooks/01_eda.ipynb`
-- Bonus insight summary: `outputs/bonus_insight.md`
-- dbt-web-runnable EDA queries (dbt analyses): `dbt/flinn_bi/analyses/`
-  - `dbt/flinn_bi/analyses/bonus_activation_funnel.sql`
-  - `dbt/flinn_bi/analyses/backend_to_hubspot_mapping.sql`
-  - `dbt/flinn_bi/analyses/eda_seed_profiling.sql`
-
-Headline findings:
-- Seeds are clean at the ID level (no null IDs, no duplicate IDs) and have consistent date coverage across 2024–2026.
-- Backend events cover 37 orgs (≈14.6% of HubSpot companies); product-event retention will reflect this subset.
-- Bonus insight: **62.0% (93/150)** of new users run `SearchExecuted` within 7 days of `UserCreated` (see `outputs/bonus_insight.md`).
+## Next 6 months roadmap (product-minded)
+- Automate ingestion (daily) + add source freshness checks
+- Introduce dimensional model (accounts/users) and consistent IDs across systems
+- Expand activation + retention to customer/non-customer segments
+- Add deal attribution (product usage → pipeline outcomes) with documented limitations
+- Establish metric contracts (tests + docs) and governance for definitions
+- Add simple dashboards for exec KPIs (customers, ACV, activation, retention)
