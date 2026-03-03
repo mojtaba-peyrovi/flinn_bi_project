@@ -191,18 +191,13 @@ flowchart LR
   int_backend_user_activity --> mart_user_retention
 ```
 
-## Next 6 months roadmap (product-minded)
-- Automate ingestion (daily) + add source freshness checks
-- Introduce dimensional model (accounts/users) and consistent IDs across systems
-- Expand activation + retention to customer/non-customer segments
-- Add deal attribution (product usage → pipeline outcomes) with documented limitations
-- Establish metric contracts (tests + docs) and governance for definitions
-- Add simple dashboards for exec KPIs (customers, ACV, activation, retention)
 
 ## AI collaboration (how I used AI in this exercise)
 I used AI (Codex/ChatGPT) mostly as a productivity boost: scaffolding the project structure, sketching dbt model templates, and drafting early versions of queries so I could iterate faster.
 
 I still personally owned the important parts: the business definitions (Customer, ACV, Retention), the join strategy, and the final interpretation of results. I also reviewed/edit AI-generated code for readability and correctness, and I rewrote things when the logic didn’t match the dataset or the metric I actually wanted.
+
+I treat AI as an accelerator, not a magic wand. In practice I break work into small subtasks, walk through them step-by-step with the agent, and sanity-check outputs after each step. The agent doesn’t “decide” what’s final — it’s kept on a tight leash with explicit constraints and lots of review, so it can’t wander off and build something I didn’t ask for.
 
 ### What I verified manually
 - Metric sanity checks: counts, date ranges, duplicates, null handling, and cross-checks across tables
