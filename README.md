@@ -50,6 +50,17 @@ dbt docs generate
 dbt docs serve
 ```
 
+### 5) Offline dbt docs (no install)
+This repo includes a pre-generated static docs snapshot under `docs/`.
+
+- Open `docs/static_index.html` directly (Windows: `Start-Process docs\\static_index.html`).
+- To regenerate after making changes:
+  ```powershell
+  cd dbt\flinn_bi
+  $env:DBT_PROFILES_DIR = (Get-Location).Path
+  ..\..\.venv\Scripts\dbt docs generate --static --target-path ..\..\docs --profiles-dir .
+  ```
+
 ## Answers (as of 2026-03-02)
 All numbers below come from the marts in `dbt/flinn_bi/models/marts/`.
 
