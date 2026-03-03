@@ -207,3 +207,8 @@ I treat AI as an accelerator, not a magic wand. In practice I break work into sm
 
 ### Why this workflow
 This mirrors how I work in practice: AI helps get to a solid first draft quickly, and then I spend my time on correctness, trust, and explainability (the parts that matter most in analytics and data modeling).
+
+### How I’d approach this role going forward
+If I joined Flinn, I’d keep using AI heavily — but in a regulated, guided way. I start with the business problem and the decision it supports, then pick the simplest tech that solves it (AI or not). If a tool doesn’t move a real metric or unblock a real workflow, it’s just expensive noise.
+
+Over time, repeatable processes with predictable outcomes can be carefully delegated to AI agents, with data security as the first constraint (especially with proprietary models). The bigger part of the job stays human: stakeholder management, learning the business dynamics, and treating BI as a data product — not chasing shiny tech without a use case.
