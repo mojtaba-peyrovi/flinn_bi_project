@@ -76,8 +76,14 @@ where acv_definition = 'all_closed_won';
 - **Definition:** **monthly cohort “activity rate”** for backend users
   - cohort = month of first `UserCreated` per `user_id`
   - active in month N = user has **any** backend event **excluding**: `TokenGenerated`, `UserCreated`, `UserUpdated`, `OrganizationCreated`, `OrganizationUpdated`
+- **Aggregation (weighted across cohorts):**
+  - `retention_rate(period N) = sum(active_users at period N) / sum(cohort_size)`
 - **Headline (weighted across cohorts):** month 0 **84.0%**, month 1 **99.3%**, month 3 **96.6%**, month 6 **92.4%**, month 12 **87.1%**
 - **Model:** `analytics.mart_user_retention`
+
+Weighted retention across cohorts (presentation view):
+
+![Weighted retention across cohorts](outputs/retention_weighted_by_period.png)
 
 Month-1 retention by cohort month (presentation view):
 
