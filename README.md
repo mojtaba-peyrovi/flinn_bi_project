@@ -198,3 +198,17 @@ flowchart LR
 - Add deal attribution (product usage → pipeline outcomes) with documented limitations
 - Establish metric contracts (tests + docs) and governance for definitions
 - Add simple dashboards for exec KPIs (customers, ACV, activation, retention)
+
+## AI collaboration (how I used AI in this exercise)
+I used AI (Codex/ChatGPT) mostly as a productivity boost: scaffolding the project structure, sketching dbt model templates, and drafting early versions of queries so I could iterate faster.
+
+I still personally owned the important parts: the business definitions (Customer, ACV, Retention), the join strategy, and the final interpretation of results. I also reviewed/edit AI-generated code for readability and correctness, and I rewrote things when the logic didn’t match the dataset or the metric I actually wanted.
+
+### What I verified manually
+- Metric sanity checks: counts, date ranges, duplicates, null handling, and cross-checks across tables
+- dbt model grains and key constraints (e.g., one row per org/customer where expected)
+- dbt runs: `dbt seed` / `dbt build` run cleanly, and tests catch obvious issues
+- Assumptions + edge cases: anything non-obvious is captured in `ASSUMPTIONS.md`
+
+### Why this workflow
+This mirrors how I work in practice: AI helps get to a solid first draft quickly, and then I spend my time on correctness, trust, and explainability (the parts that matter most in analytics and data modeling).
