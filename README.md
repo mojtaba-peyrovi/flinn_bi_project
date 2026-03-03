@@ -8,6 +8,15 @@ Lean analytics repo answering Q1–Q3 with simple, review-friendly **dbt modelin
 - `notebooks/`: lightweight EDA
 - `outputs/`: short EDA-driven write-ups
 
+## Fork + run (quickstart)
+1) Fork on GitHub, then clone your fork:
+```bash
+git clone <your-fork-url>
+cd flinn_bi_project
+```
+
+2) Follow **How to run (local)** below to create a venv, install deps, configure the dbt profile, and run `dbt seed` / `dbt build`.
+
 ## How to run (local)
 ### 1) Create a Python env (Python 3.11+)
 From repo root:
@@ -30,6 +39,10 @@ dbt debug
 dbt seed
 dbt build
 ```
+
+Notes:
+- If you have a global dbt installed, make sure you’re using the venv’s dbt (activate the venv, or run `..\..\.venv\Scripts\dbt ...`).
+- The DuckDB file `dbt/flinn_bi/flinn_bi.duckdb` is created/updated after `dbt build`.
 
 ### 4) View dbt docs in your browser (localhost)
 ```bash
@@ -85,9 +98,7 @@ Weighted retention across cohorts (presentation view):
 
 ![Weighted retention across cohorts](outputs/retention_weighted_by_period.png)
 
-Month-1 retention by cohort month (presentation view):
 
-![Month-1 retention by cohort month](outputs/retention_month1_by_cohort_month.png)
 
 Repro (DuckDB):
 ```sql
