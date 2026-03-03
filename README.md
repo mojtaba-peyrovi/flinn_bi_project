@@ -40,6 +40,19 @@ dbt docs serve
 ## Answers (as of 2026-03-02)
 All numbers below come from the marts in `dbt/flinn_bi/models/marts/`.
 
+### Access DuckDB (terminal)
+dbt writes to `dbt/flinn_bi/flinn_bi.duckdb` (created after you run `dbt build`).
+
+PowerShell (via Python):
+```powershell
+.\.venv\Scripts\python -c "import duckdb; con=duckdb.connect('dbt/flinn_bi/flinn_bi.duckdb'); print(con.execute('show tables').fetchall())"
+```
+
+If you have the DuckDB CLI installed:
+```powershell
+duckdb dbt\flinn_bi\flinn_bi.duckdb
+```
+
 ### Q1) How many customers today?
 - **Answer:** **26 customers**
 - **Definition:** a “customer” is a HubSpot **company** with **≥ 1 Closed Won deal** (`is_closed_won = true`).
