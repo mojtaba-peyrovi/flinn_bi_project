@@ -43,12 +43,8 @@ All numbers below come from the marts in `dbt/flinn_bi/models/marts/`.
 ### Access DuckDB (terminal)
 dbt writes to `dbt/flinn_bi/flinn_bi.duckdb` (created after you run `dbt build`).
 
-PowerShell (via Python):
-```powershell
-.\.venv\Scripts\python -c "import duckdb; con=duckdb.connect('dbt/flinn_bi/flinn_bi.duckdb'); print(con.execute('show tables').fetchall())"
-```
+PowerShell (via Python - Duckdb CLI):
 
-If you have the DuckDB CLI installed:
 ```powershell
 duckdb dbt\flinn_bi\flinn_bi.duckdb
 ```
@@ -82,6 +78,10 @@ where acv_definition = 'all_closed_won';
   - active in month N = user has **any** backend event **excluding**: `TokenGenerated`, `UserCreated`, `UserUpdated`, `OrganizationCreated`, `OrganizationUpdated`
 - **Headline (weighted across cohorts):** month 0 **84.0%**, month 1 **99.3%**, month 3 **96.6%**, month 6 **92.4%**, month 12 **87.1%**
 - **Model:** `analytics.mart_user_retention`
+
+Month-1 retention by cohort month (presentation view):
+
+![Month-1 retention by cohort month](outputs/retention_month1_by_cohort_month.png)
 
 Repro (DuckDB):
 ```sql
