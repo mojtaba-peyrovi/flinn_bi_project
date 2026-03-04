@@ -191,6 +191,96 @@ flowchart LR
   int_backend_user_activity --> mart_user_retention
 ```
 
+### ERD (keys used for joins)
+This ERD focuses on the **join keys** used across the main entities (HubSpot objects, backend events, and the derived marts).
+
+```mermaid
+erDiagram
+  HUBSPOT_ORG {
+    bigint company_id PK
+    string company_name
+    string domain
+  }
+
+  HUBSPOT_CONTACTS {
+    bigint contact_id PK
+    bigint hubspot_company_id FK
+    string email
+  }
+
+  HUBSPOT_DEALS {
+    bigint deal_id PK
+    bigint hubspot_company_id FK
+    boolean is_closed_won
+    double amount
+    timestamp close_date
+  }
+
+  STG_BACKEND_EVENTS {
+    string event_id PK
+    string user_id
+    string backend_organization_id
+    string event_name
+    timestamp event_timestamp
+  }
+
+  INT_BACKEND_USERS {
+    string user_id PK
+    timestamp user_created_ts
+    string backend_organization_id
+  }
+
+  INT_BACKEND_USER_ACTIVITY {
+    string user_id
+    timestamp activity_month
+  }
+
+  INT_HUBSPOT_CUSTOMER_ORGS {
+    bigint company_id PK
+    int closed_won_deal_count
+    timestamp first_closed_won_date
+  }
+
+  MART_CUSTOMERS_TODAY {
+    date as_of_date
+    bigint company_id PK
+  }
+
+  MART_ACV {
+    date as_of_date
+    string acv_definition
+    string deal_type
+    int closed_won_deal_count
+    double mean_acv
+    double median_acv
+  }
+
+  MART_USER_RETENTION {
+    timestamp cohort_month PK
+    int period_number PK
+    int cohort_size
+    int active_users
+    double retention_rate
+  }
+
+  HUBSPOT_ORG ||--o{ HUBSPOT_CONTACTS : "company_id = hubspot_company_id"
+  HUBSPOT_ORG ||--o{ HUBSPOT_DEALS : "company_id = hubspot_company_id"
+
+  HUBSPOT_DEALS }o--|| INT_HUBSPOT_CUSTOMER_ORGS : "hubspot_company_id"
+  HUBSPOT_ORG ||--|| INT_HUBSPOT_CUSTOMER_ORGS : "company_id"
+  INT_HUBSPOT_CUSTOMER_ORGS ||--|| MART_CUSTOMERS_TODAY : "company_id"
+
+  STG_BACKEND_EVENTS ||--o{ INT_BACKEND_USERS : "user_id (UserCreated)"
+  INT_BACKEND_USERS ||--o{ INT_BACKEND_USER_ACTIVITY : "user_id"
+
+  INT_BACKEND_USERS ||--o{ MART_USER_RETENTION : "derived by cohort_month"
+  INT_BACKEND_USER_ACTIVITY ||--o{ MART_USER_RETENTION : "derived by activity_month"
+
+  HUBSPOT_DEALS ||--o{ MART_ACV : "derived from Closed Won deals"
+```
+
+Note: backend ↔ HubSpot linking is **not** a native key match (UUID vs bigint). When needed for analysis, it’s done via `UserCreated` email extracted from `event_properties` and joined to `hubspot_contacts.email` (see `dbt/flinn_bi/analyses/backend_to_hubspot_mapping.sql`).
+
 
 ## AI collaboration (how I used AI in this exercise)
 I used AI (Codex/ChatGPT) mostly as a productivity boost: scaffolding the project structure, sketching dbt model templates, and drafting early versions of queries so I could iterate faster.
